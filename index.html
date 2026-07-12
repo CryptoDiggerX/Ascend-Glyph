@@ -194,7 +194,7 @@
 
   <div class="stat-grid">
     <div class="stat-card"><div class="sl">Total Supply</div><div class="sv">553,000,000</div></div>
-    <div class="stat-card"><div class="sl">Reserve Fee</div><div class="sv accent">0.00003 ETH</div></div>
+    <div class="stat-card"><div class="sl">Network</div><div class="sv accent">Base Mainnet</div></div>
   </div>
 
   <div class="section-title">Pass Utilities</div>
@@ -221,8 +221,8 @@
     </div>
   </div>
 
-  <button class="reserve-btn" id="reserveBtn">Reserve Ascend Pass — 0.00003 ETH</button>
-  <div class="fee-note">One-time reservation fee · secures your seat</div>
+  <button class="reserve-btn" id="reserveBtn">Reserve Ascend Pass</button>
+  <div class="fee-note">Network fee applies · shown in your wallet before confirming</div>
   <div class="status-line" id="statusLine"></div>
 
   <div class="listing">
@@ -294,7 +294,7 @@
     } catch (err) {
       console.error(err);
       btn.disabled = false;
-      btn.textContent = 'Reserve Ascend Pass — 0.00003 ETH';
+      btn.textContent = 'Reserve Ascend Pass';
       setStatus('<span style="color:#FF7EB3">' + (err.message || 'Something went wrong') + '</span>');
     }
   });
