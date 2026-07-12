@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ascend Pass — Reserve Your Allocation</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --void:#07050C;
+    --panel:#12101C;
+    --panel-line:rgba(200,170,255,0.14);
+    --gold:#F0C674;
+    --violet:#8B6BFF;
+    --rose:#FF7EB3;
+    --text-hi:#F4F0FF;
+    --text-mid:#9C93B8;
+    --text-low:#5C5476;
+    --green:#3EE697;
+    --mono:'JetBrains Mono','Space Mono',monospace;
+    --sans:'Space Grotesk','Inter',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--void); color:var(--text-hi); font-family:var(--sans); min-height:100vh;}
+  body{
+    background:
+      radial-gradient(ellipse 650px 400px at 50% -8%, rgba(139,107,255,0.22), transparent 60%),
+      radial-gradient(ellipse 500px 350px at 100% 90%, rgba(255,126,179,0.10), transparent 60%),
+      var(--void);
+    padding-bottom:44px;
+  }
+  .wrap{max-width:480px; margin:0 auto; padding:22px 18px 0;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background:linear-gradient(135deg, var(--gold), #B8873E);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:700; font-size:15px; color:#1a1408;
+    box-shadow:0 0 22px rgba(240,198,116,0.4);
+  }
+  .brand-text{font-family:var(--mono); font-size:11px; letter-spacing:0.14em; color:var(--text-mid); text-transform:uppercase;}
+  .brand-text b{color:var(--text-hi); display:block; font-size:14px; font-family:var(--sans); font-weight:700;}
+  .net-pill{
+    font-family:var(--mono); font-size:10px; color:var(--violet);
+    border:1px solid rgba(139,107,255,0.35); background:rgba(139,107,255,0.08);
+    padding:5px 10px; border-radius:100px; display:flex; align-items:center; gap:6px;
+  }
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+  .pass-card{
+    position:relative;
+    height:190px;
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:22px;
+    background:
+      linear-gradient(135deg, rgba(240,198,116,0.16), rgba(139,107,255,0.14) 45%, rgba(255,126,179,0.10) 100%),
+      linear-gradient(160deg, #17132A, #0D0A18);
+    border:1px solid rgba(240,198,116,0.3);
+    box-shadow:0 20px 60px -20px rgba(139,107,255,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+    overflow:hidden;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .pass-card::before{
+    content:'';
+    position:absolute; top:-60%; left:-20%; width:280px; height:280px;
+    background:radial-gradient(circle, rgba(240,198,116,0.25), transparent 70%);
+    pointer-events:none;
+  }
+  .pass-card::after{
+    content:'';
+    position:absolute; bottom:-50%; right:-10%; width:220px; height:220px;
+    background:radial-gradient(circle, rgba(139,107,255,0.3), transparent 70%);
+    pointer-events:none;
+  }
+  .pass-top{display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1;}
+  .pass-kicker{font-family:var(--mono); font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color:var(--gold);}
+  .pass-title{font-size:19px; font-weight:700; margin-top:4px; letter-spacing:-0.01em;}
+  .pass-chip{
+    font-family:var(--mono); font-size:9.5px; letter-spacing:0.08em;
+    color:var(--violet); border:1px solid rgba(139,107,255,0.4);
+    padding:4px 9px; border-radius:100px; text-transform:uppercase;
+  }
+  .pass-bottom{display:flex; justify-content:space-between; align-items:flex-end; position:relative; z-index:1;}
+  .pass-id{font-family:var(--mono); font-size:11px; color:var(--text-low); letter-spacing:0.08em;}
+  .pass-glyph{font-size:26px; opacity:0.9;}
+  h1{font-size:24px; font-weight:700; letter-spacing:-0.01em; line-height:1.2; margin-bottom:6px;}
+  .sub{font-size:13.5px; color:var(--text-mid); line-height:1.55; margin-bottom:22px;}
+  .alloc-card{
+    border-radius:20px; padding:24px 22px; margin-bottom:14px;
+    background:linear-gradient(160deg, rgba(139,107,255,0.14), rgba(18,16,28,0.9) 55%);
+    border:1px solid rgba(139,107,255,0.35);
+  }
+  .alloc-eyebrow{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:10px;
+  }
+  .alloc-amount{
+    font-family:var(--mono); font-size:38px; font-weight:700; line-height:1;
+    letter-spacing:-0.01em; margin-bottom:6px;
+  }
+  .alloc-amount span{font-size:15px; color:var(--text-mid); font-weight:500; margin-left:6px;}
+  .alloc-sub{font-size:12px; color:var(--text-low); font-family:var(--mono);}
+  .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;}
+  .stat-card{background:var(--panel); border:1px solid var(--panel-line); border-radius:14px; padding:14px 16px;}
+  .stat-card .sl{font-family:var(--mono); font-size:9.5px; letter-spacing:0.1em; color:var(--text-low); text-transform:uppercase; margin-bottom:6px;}
+  .stat-card .sv{font-family:var(--mono); font-size:15px; font-weight:600;}
+  .stat-card .sv.accent{color:var(--gold);}
+  .section-title{
+    font-family:var(--mono); font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--text-mid); margin-bottom:12px; padding-left:2px;
+  }
+  .util-list{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:16px;
+    padding:6px 18px; margin-bottom:16px;
+  }
+  .util-item{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:13px 0; border-bottom:1px solid var(--panel-line);
+  }
+  .util-item:last-child{border-bottom:none;}
+  .util-icon{
+    width:26px; height:26px; border-radius:8px; flex-shrink:0;
+    background:rgba(240,198,116,0.1); border:1px solid rgba(240,198,116,0.3);
+    display:flex; align-items:center; justify-content:center; font-size:13px; margin-top:1px;
+  }
+  .util-body b{font-size:13.5px; display:block; margin-bottom:2px;}
+  .util-body span{font-size:12px; color:var(--text-mid); line-height:1.4; display:block;}
+  .reserve-btn{
+    width:100%; padding:17px; border-radius:14px; border:none;
+    background:linear-gradient(135deg, var(--gold), #C9944B);
+    color:#1a1408; font-family:var(--sans); font-size:15.5px; font-weight:700;
+    cursor:pointer; box-shadow:0 10px 30px -8px rgba(240,198,116,0.5);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:transform 0.15s ease; margin-bottom:10px;
+  }
+  .reserve-btn:active{transform:scale(0.98);}
+  .reserve-btn:disabled{
+    background:var(--panel); color:var(--text-low); box-shadow:none; cursor:not-allowed;
+    border:1px solid var(--panel-line);
+  }
+  .fee-note{text-align:center; font-family:var(--mono); font-size:11px; color:var(--text-low); margin-bottom:24px;}
+  .status-line{
+    display:flex; align-items:center; gap:8px; justify-content:center;
+    font-family:var(--mono); font-size:12px; color:var(--text-mid); margin-bottom:20px; min-height:16px;
+  }
+  .spinner{width:12px; height:12px; border-radius:50%; border:2px solid var(--panel-line); border-top-color:var(--gold); animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .listing{background:var(--panel); border:1px solid var(--panel-line); border-radius:14px; padding:16px 18px; margin-bottom:14px;}
+  .listing-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+  .listing-head .lt{font-family:var(--mono); font-size:10.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-mid);}
+  .listing-date{font-family:var(--mono); font-size:12px; color:var(--gold); font-weight:700;}
+  .exch-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .exch-chip{font-family:var(--mono); font-size:11px; background:rgba(255,255,255,0.03); border:1px solid var(--panel-line); padding:6px 12px; border-radius:8px;}
+  .exch-chip.dex{color:var(--violet); border-color:rgba(139,107,255,0.3); background:rgba(139,107,255,0.06);}
+  .exch-chip.cex{color:var(--green); border-color:rgba(62,230,151,0.25); background:rgba(62,230,151,0.05);}
+  .foot-note{text-align:center; font-family:var(--mono); font-size:10.5px; color:var(--text-low); line-height:1.6; padding:6px 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">A</div>
+      <div class="brand-text">Ascend Pass<b>Far Base</b></div>
+    </div>
+    <div class="net-pill"><span class="dot"></span>BASE</div>
+  </div>
+
+  <div class="pass-card">
+    <div class="pass-top">
+      <div>
+        <div class="pass-kicker">Early Access</div>
+        <div class="pass-title">Ascend Pass</div>
+      </div>
+      <div class="pass-chip">Non-Transferable</div>
+    </div>
+    <div class="pass-bottom">
+      <div class="pass-id">ASCEND · SERIES 01</div>
+      <div class="pass-glyph">↗</div>
+    </div>
+  </div>
+
+  <h1>Reserve your Ascend Pass</h1>
+  <p class="sub">Pass holders share 12% of total supply at TGE. Limited series, first come first served — no contract, no token yet, just your guaranteed seat.</p>
+
+  <div class="alloc-card">
+    <div class="alloc-eyebrow">◆ Pool Reserved For Pass Holders</div>
+    <div class="alloc-amount">66,360,000<span>tokens</span></div>
+    <div class="alloc-sub">12% of 553,000,000 total supply · split across all Pass holders</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="sl">Total Supply</div><div class="sv">553,000,000</div></div>
+    <div class="stat-card"><div class="sl">Reserve Fee</div><div class="sv accent">0.00003 ETH</div></div>
+  </div>
+
+  <div class="section-title">Pass Utilities</div>
+  <div class="util-list">
+    <div class="util-item">
+      <div class="util-icon">◈</div>
+      <div class="util-body"><b>Guaranteed Allocation</b><span>12% of total supply reserved exclusively for Pass holders at TGE.</span></div>
+    </div>
+    <div class="util-item">
+      <div class="util-icon">⚡</div>
+      <div class="util-body"><b>Priority Access</b><span>First access to future claim rounds and ecosystem drops.</span></div>
+    </div>
+    <div class="util-item">
+      <div class="util-icon">%</div>
+      <div class="util-body"><b>Fee Discounts</b><span>Reduced fees on future mint, claim, and swap events.</span></div>
+    </div>
+    <div class="util-item">
+      <div class="util-icon">◇</div>
+      <div class="util-body"><b>Governance Weight</b><span>Early voting power on roadmap and community decisions.</span></div>
+    </div>
+    <div class="util-item">
+      <div class="util-icon">★</div>
+      <div class="util-body"><b>OG Recognition</b><span>On-chain proof of early support across all Far Base products.</span></div>
+    </div>
+  </div>
+
+  <button class="reserve-btn" id="reserveBtn">Reserve Ascend Pass — 0.00003 ETH</button>
+  <div class="fee-note">One-time reservation fee · secures your seat</div>
+  <div class="status-line" id="statusLine"></div>
+
+  <div class="listing">
+    <div class="listing-head">
+      <div class="lt">Token Listing · TGE</div>
+      <div class="listing-date">Aug 1, 2026</div>
+    </div>
+    <div class="exch-row">
+      <div class="exch-chip dex">Uniswap</div>
+      <div class="exch-chip dex">Aerodrome</div>
+      <div class="exch-chip cex">Bitget</div>
+      <div class="exch-chip cex">KuCoin</div>
+      <div class="exch-chip cex">OKX</div>
+    </div>
+  </div>
+
+  <div class="foot-note">This reservation does not mint a token or NFT. It records your on-chain intent to claim your Pass allocation at TGE.<br>No further action needed after reserving.</div>
+
+</div>
+
+<script>
+(function(){
+  const FEE_RECEIVER = "0x580Aab97021D7D379c8d26444eAae332C3014ba7";
+  const FEE_ETH = "0.00003";
+  const BASE_CHAIN_ID_HEX = "0x2105"; // 8453
+
+  const btn = document.getElementById('reserveBtn');
+  const statusLine = document.getElementById('statusLine');
+
+  function setStatus(html){ statusLine.innerHTML = html; }
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = 'Confirm in wallet…';
+    setStatus('<div class="spinner"></div>Waiting for wallet confirmation…');
+
+    try {
+      if (!window.ethereum) {
+        throw new Error('No wallet found. Open this page inside your wallet app browser.');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+
+      const network = await provider.getNetwork();
+      if (network.chainId !== 8453n) {
+        try {
+          await provider.send('wallet_switchEthereumChain', [{ chainId: BASE_CHAIN_ID_HEX }]);
+        } catch (switchErr) {
+          throw new Error('Please switch to Base Mainnet in your wallet');
+        }
+      }
+
+      const signer = await provider.getSigner();
+
+      setStatus('<div class="spinner"></div>Sending reservation…');
+      const tx = await signer.sendTransaction({
+        to: FEE_RECEIVER,
+        value: ethers.parseEther(FEE_ETH),
+        gasLimit: 21000
+      });
+
+      setStatus('<div class="spinner"></div>Confirming on Base…');
+      await tx.wait();
+
+      btn.textContent = 'Pass Reserved ✓';
+      setStatus(`Reserved · <a href="https://basescan.org/tx/${tx.hash}" target="_blank" style="color:#F0C674">view transaction</a>`);
+
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Reserve Ascend Pass — 0.00003 ETH';
+      setStatus('<span style="color:#FF7EB3">' + (err.message || 'Something went wrong') + '</span>');
+    }
+  });
+})();
+</script>
+</body>
+</html>
